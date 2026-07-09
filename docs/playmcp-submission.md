@@ -91,6 +91,14 @@ This MVP does:
 
 ## Representative Image Direction
 
+Generated asset:
+
+```text
+assets/playmcp-representative.png
+```
+
+Format: PNG, 1254x1254 px.
+
 Create a simple 600x600 icon:
 
 - Dark background matching PlayMCP's catalog tone.
