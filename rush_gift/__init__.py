@@ -1,0 +1,1 @@
+"""Rush Gift MCP package."""

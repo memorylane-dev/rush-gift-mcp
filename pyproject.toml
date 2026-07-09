@@ -1,0 +1,10 @@
+[project]
+name = "rush-gift-mcp"
+version = "0.1.0"
+description = "A PlayMCP-ready last-minute gift pickup planner MCP server."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = []
