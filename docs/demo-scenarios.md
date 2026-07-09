@@ -6,7 +6,7 @@ Prompt:
 
 ```text
 지금 강남역에서 판교역으로 여자친구 생일 약속 가는 중이야.
-30분 안에 도착해야 하고 예산은 3만원이야.
+35분 안에 도착해야 하고 예산은 3만원이야.
 가는 길에 픽업 가능한 선물 추천해줘.
 ```
 
@@ -17,6 +17,8 @@ Expected direction:
 - low risk
 - clear pickup route
 - warm short message
+
+30분으로 줄이면 픽업이 어렵다는 fallback을 보여주는 실패 처리 데모로 사용한다.
 
 ## Scenario 2: Manager Housewarming
 

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "flower-mini-001",
+    "name": "미니 꽃다발",
+    "category": "flowers",
+    "price_krw": 25000,
+    "tags": ["romantic", "birthday", "anniversary", "apology", "quick_pickup"],
+    "occasions": ["birthday", "anniversary", "apology", "date"],
+    "relationships": ["girlfriend", "boyfriend", "partner", "friend"],
+    "avoid_for": ["manager_housewarming"],
+    "risk_level": "low",
+    "message_hint": "짧지만 마음이 보이는 선물입니다."
+  },
+  {
+    "id": "dessert-macaron-001",
+    "name": "마카롱 6구 세트",
+    "category": "dessert",
+    "price_krw": 18000,
+    "tags": ["dessert", "birthday", "friend", "quick_pickup", "safe"],
+    "occasions": ["birthday", "thanks", "apology", "casual_visit"],
+    "relationships": ["girlfriend", "boyfriend", "partner", "friend", "coworker"],
+    "avoid_for": [],
+    "risk_level": "low",
+    "message_hint": "부담 없이 기분을 풀어주는 달콤한 선택입니다."
+  },
+  {
+    "id": "coffee-cake-001",
+    "name": "커피와 미니 케이크 세트",
+    "category": "cafe",
+    "price_krw": 22000,
+    "tags": ["cafe", "birthday", "thanks", "quick_pickup", "safe"],
+    "occasions": ["birthday", "thanks", "casual_visit", "work_meeting"],
+    "relationships": ["friend", "coworker", "manager", "partner"],
+    "avoid_for": [],
+    "risk_level": "low",
+    "message_hint": "대부분의 상황에서 무난하고 실패 확률이 낮습니다."
+  },
+  {
+    "id": "home-diffuser-001",
+    "name": "은은한 디퓨저",
+    "category": "home",
+    "price_krw": 29000,
+    "tags": ["home", "housewarming", "polite", "practical"],
+    "occasions": ["housewarming", "thanks"],
+    "relationships": ["manager", "coworker", "friend", "parents"],
+    "avoid_for": ["strong_scent_sensitive"],
+    "risk_level": "medium",
+    "message_hint": "집들이나 감사 인사에 격식을 지키기 좋습니다."
+  },
+  {
+    "id": "premium-tea-001",
+    "name": "프리미엄 티백 세트",
+    "category": "tea",
+    "price_krw": 24000,
+    "tags": ["tea", "parents", "thanks", "polite", "safe"],
+    "occasions": ["thanks", "parents_visit", "housewarming", "apology"],
+    "relationships": ["parents", "manager", "coworker", "friend"],
+    "avoid_for": [],
+    "risk_level": "low",
+    "message_hint": "차분하고 예의 있는 느낌을 주는 선물입니다."
+  },
+  {
+    "id": "fruit-small-001",
+    "name": "소형 과일 바구니",
+    "category": "food",
+    "price_krw": 39000,
+    "tags": ["parents", "healthy", "visit", "polite"],
+    "occasions": ["parents_visit", "thanks", "housewarming"],
+    "relationships": ["parents", "manager", "family"],
+    "avoid_for": ["low_budget"],
+    "risk_level": "low",
+    "message_hint": "가족 방문이나 어른에게 안정적인 선택입니다."
+  },
+  {
+    "id": "stationery-card-001",
+    "name": "작은 카드와 고급 펜",
+    "category": "stationery",
+    "price_krw": 17000,
+    "tags": ["message", "apology", "thanks", "practical"],
+    "occasions": ["apology", "thanks", "work_meeting"],
+    "relationships": ["friend", "coworker", "manager"],
+    "avoid_for": ["romantic_birthday"],
+    "risk_level": "medium",
+    "message_hint": "말로 전하기 어려운 내용을 차분하게 보완합니다."
+  },
+  {
+    "id": "wine-zero-001",
+    "name": "논알콜 스파클링 와인",
+    "category": "drink",
+    "price_krw": 26000,
+    "tags": ["celebration", "housewarming", "anniversary", "non_alcohol"],
+    "occasions": ["housewarming", "anniversary", "birthday"],
+    "relationships": ["friend", "partner", "coworker"],
+    "avoid_for": ["parents_visit"],
+    "risk_level": "medium",
+    "message_hint": "축하 분위기를 만들지만 과하지 않은 선택입니다."
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "store-gangnam-flower",
+    "name": "강남역 플라워 픽업",
+    "address": "서울 강남구 강남대로 지하상가",
+    "lat": 37.49841,
+    "lng": 127.02812,
+    "open_until": "22:00",
+    "pickup_ready_minutes": 8,
+    "reliability_score": 0.92,
+    "available_gift_ids": ["flower-mini-001", "dessert-macaron-001"]
+  },
+  {
+    "id": "store-gangnam-dessert",
+    "name": "강남 디저트 바로픽업",
+    "address": "서울 강남구 테헤란로 101",
+    "lat": 37.50091,
+    "lng": 127.02777,
+    "open_until": "23:00",
+    "pickup_ready_minutes": 6,
+    "reliability_score": 0.9,
+    "available_gift_ids": ["dessert-macaron-001", "coffee-cake-001"]
+  },
+  {
+    "id": "store-seolleung-cafe",
+    "name": "선릉 카페 선물픽업",
+    "address": "서울 강남구 선릉로 512",
+    "lat": 37.50492,
+    "lng": 127.04894,
+    "open_until": "22:30",
+    "pickup_ready_minutes": 7,
+    "reliability_score": 0.87,
+    "available_gift_ids": ["coffee-cake-001", "premium-tea-001", "stationery-card-001"]
+  },
+  {
+    "id": "store-yangjae-home",
+    "name": "양재 라이프스타일 픽업",
+    "address": "서울 서초구 남부순환로 2620",
+    "lat": 37.48465,
+    "lng": 127.03489,
+    "open_until": "21:30",
+    "pickup_ready_minutes": 10,
+    "reliability_score": 0.84,
+    "available_gift_ids": ["home-diffuser-001", "premium-tea-001", "wine-zero-001"]
+  },
+  {
+    "id": "store-pangyo-gift",
+    "name": "판교역 선물 픽업존",
+    "address": "경기 성남시 분당구 판교역로 146",
+    "lat": 37.39454,
+    "lng": 127.11188,
+    "open_until": "22:00",
+    "pickup_ready_minutes": 5,
+    "reliability_score": 0.89,
+    "available_gift_ids": ["flower-mini-001", "dessert-macaron-001", "coffee-cake-001", "premium-tea-001"]
+  },
+  {
+    "id": "store-jamsil-family",
+    "name": "잠실 패밀리 기프트",
+    "address": "서울 송파구 올림픽로 240",
+    "lat": 37.51291,
+    "lng": 127.1002,
+    "open_until": "22:00",
+    "pickup_ready_minutes": 12,
+    "reliability_score": 0.86,
+    "available_gift_ids": ["fruit-small-001", "premium-tea-001", "home-diffuser-001"]
+  },
+  {
+    "id": "store-hongdae-casual",
+    "name": "홍대 캐주얼 기프트",
+    "address": "서울 마포구 양화로 188",
+    "lat": 37.55755,
+    "lng": 126.92504,
+    "open_until": "23:30",
+    "pickup_ready_minutes": 6,
+    "reliability_score": 0.88,
+    "available_gift_ids": ["dessert-macaron-001", "wine-zero-001", "stationery-card-001"]
+  }
+]

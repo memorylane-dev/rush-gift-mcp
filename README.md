@@ -32,8 +32,8 @@ MCP Tools
   -> RushGiftService
     -> GiftProvider
     -> PickupStoreProvider
+    -> PlaceProvider
     -> RouteProvider
-    -> MessageService
 ```
 
 초기 provider:
@@ -49,7 +49,7 @@ MCP Tools
 - `KakaoMobilityRouteProvider`
 - `WebSearchGiftProvider`
 
-## Planned Tools
+## Tools
 
 - `plan_rush_gift`: 상황을 받아 추천, 픽업, 경유 시간, 메시지를 한 번에 반환
 - `recommend_gifts`: 관계/상황/예산 기준으로 선물 후보 추천
@@ -60,8 +60,37 @@ MCP Tools
 
 ```text
 지금 강남역에서 판교역으로 여자친구 생일 약속 가는 중이야.
-30분 안에 도착해야 하고 예산은 3만원이야.
+35분 안에 도착해야 하고 예산은 3만원이야.
 가는 길에 픽업 가능한 선물 추천해줘.
+```
+
+30분으로 요청하면 현재 샘플 경로 기준으로는 픽업이 어렵다는 fallback을 반환합니다.
+이 케이스는 "무조건 추천"이 아니라 불가능한 상황을 솔직하게 말하는 데모로 사용합니다.
+
+## Quick Start
+
+```bash
+uv sync
+uv run mcp dev main.py
+```
+
+MCP Inspector가 열리면 다음 도구를 호출할 수 있습니다.
+
+- `plan_rush_gift`: 선물 추천, 픽업 매장, 경유 가능성, 메시지를 한 번에 반환
+- `recommend_gifts`: 관계/상황/예산 기준으로 선물 후보 추천
+- `find_pickup_options`: 선물 후보별 픽업 매장과 경유 가능성 계산
+- `draft_gift_message`: 관계와 상황에 맞는 짧은 카드 메시지 생성
+
+stdio 서버로 직접 실행할 때:
+
+```bash
+uv run python main.py
+```
+
+테스트:
+
+```bash
+uv run pytest
 ```
 
 ## Documentation
@@ -73,6 +102,15 @@ MCP Tools
 
 ## Development Status
 
-This repository currently contains the product plan, PlayMCP registration copy,
-architecture, and implementation roadmap. The next step is implementing the
-fixture-backed MCP server.
+Implemented:
+
+- fixture-backed gift, place, store, and route providers
+- transparent scoring for gift fit and pickup feasibility
+- four MCP tools in `main.py`
+- unit tests for recommendation, fallback, budget filtering, pickup options, and MCP tool registration
+
+Next:
+
+- expose an HTTP MCP endpoint for PlayMCP registration
+- add deployment config
+- replace fixture providers with Kakao/web providers when available

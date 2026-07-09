@@ -2,7 +2,7 @@
 
 ## Phase 0: Repo And Docs
 
-Status: planned
+Status: done
 
 - Create standalone repository.
 - Add PlayMCP submission copy.
@@ -12,6 +12,8 @@ Status: planned
 ## Phase 1: Fixture-Backed MCP
 
 Goal: local MCP Inspector demo.
+
+Status: in progress
 
 Tasks:
 
@@ -106,7 +108,7 @@ Given:
 
 ```text
 지금 강남역에서 판교역으로 여자친구 생일 약속 가는 중이야.
-30분 안에 도착해야 하고 예산은 3만원이야.
+35분 안에 도착해야 하고 예산은 3만원이야.
 가는 길에 픽업 가능한 선물 추천해줘.
 ```
 
@@ -121,3 +123,6 @@ The server returns:
 - why it fits the relationship and occasion
 - short message
 - fixture/mock provenance
+
+The same prompt with 30 minutes currently returns a timing fallback. Keep that
+as an impossible-timing demo unless the mock route model or sample stores change.

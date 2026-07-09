@@ -1,12 +1,12 @@
 # Data
 
-Initial MVP data will live here.
+MVP fixture data lives here.
 
-Planned files:
+Files:
 
 - `gifts.json`: gift catalog
 - `stores.json`: pickup store catalog
-- `occasion_rules.json`: relationship and occasion scoring rules
+- `places.json`: sample place names and coordinates
 
-All initial data is sample fixture data. It must not be described as live Kakao
-Gift inventory.
+All data is sample fixture data. It must not be described as live Kakao Gift
+inventory, real pickup stock, or a confirmed reservation source.

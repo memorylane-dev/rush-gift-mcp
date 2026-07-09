@@ -4,7 +4,14 @@ version = "0.1.0"
 description = "A PlayMCP-ready last-minute gift pickup planner MCP server."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "mcp[cli]>=1.28.1",
+]
 
 [dependency-groups]
-dev = []
+dev = [
+    "pytest>=8.3.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

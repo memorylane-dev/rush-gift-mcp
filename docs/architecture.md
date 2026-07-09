@@ -67,7 +67,7 @@ Responsibilities:
 
 ```python
 class PickupStoreProvider(Protocol):
-    def find_stores(self, gift_ids: list[str], area: SearchArea) -> list[PickupStore]:
+    def find_stores(self, gift_ids: list[str]) -> list[PickupStore]:
         ...
 ```
 
@@ -80,14 +80,15 @@ Responsibilities:
 
 ```python
 class RouteProvider(Protocol):
-    def estimate_route(self, origin: Location, destination: Location, waypoint: Location | None) -> RouteEstimate:
+    def travel_minutes(self, origin: Location, destination: Location, transport_mode: str) -> int:
         ...
 ```
 
 Responsibilities:
 
-- Estimate direct route and route via pickup store.
-- Return additional duration and arrival feasibility.
+- Estimate travel time between two points.
+- Let the service combine origin-to-store and store-to-destination legs.
+- Support later replacement with real directions data.
 
 ## Scoring
 
