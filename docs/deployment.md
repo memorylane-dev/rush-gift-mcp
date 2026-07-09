@@ -106,8 +106,18 @@ If the platform does not provide `PORT`, the server defaults to `8000`.
 After deployment, paste the public MCP endpoint:
 
 ```text
-https://<deployed-host>/mcp
+https://rush-gift-mcp.vercel.app/mcp
 ```
 
 Do not use `localhost` in PlayMCP. PlayMCP must reach the server from the public
 internet or from the contest-provided cloud network.
+
+Do not paste Kakao's gateway URL into the review form:
+
+```text
+https://playmcp.kakao.com/mcp
+```
+
+That URL is PlayMCP's gateway for approved MCP servers in a user's toolbox. It is
+used after approval by PlayMCP clients with a Bearer token, not as this server's
+submission endpoint.

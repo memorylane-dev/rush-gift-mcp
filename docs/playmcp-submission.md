@@ -129,6 +129,38 @@ Current Vercel endpoint:
 https://rush-gift-mcp.vercel.app/mcp
 ```
 
+Health check:
+
+```text
+https://rush-gift-mcp.vercel.app/health
+```
+
+### PlayMCP Gateway vs Submission Endpoint
+
+These two URLs have different roles.
+
+```text
+https://rush-gift-mcp.vercel.app/mcp
+```
+
+This is the MCP server endpoint submitted for review. PlayMCP calls it to load
+the tool list and invoke this server's tools.
+
+```text
+https://playmcp.kakao.com/mcp
+```
+
+This is Kakao's PlayMCP gateway. After approval, users and external AI agents can
+connect to this gateway with a PlayMCP Bearer token. The gateway routes requests
+to MCP servers in the user's toolbox, including this server if the user added it.
+
+Post-approval test flow:
+
+1. Add `오다 주웠다` to the PlayMCP toolbox.
+2. Test the tools in PlayMCP AI Chat.
+3. For external agents, connect through `https://playmcp.kakao.com/mcp`.
+4. Check Vercel logs if a tool call reaches this server but fails.
+
 Local HTTP check:
 
 ```bash

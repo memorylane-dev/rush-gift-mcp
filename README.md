@@ -1,5 +1,7 @@
 # 오다 주웠다 MCP
 
+<img src="assets/playmcp-representative.png" alt="오다 주웠다 representative image" width="120" />
+
 약속 장소로 이동 중인 사용자를 위해 지금 살 수 있는 선물과 픽업 동선을 추천하는
 PlayMCP 제출용 MCP 서버 프로젝트입니다.
 
@@ -55,6 +57,29 @@ MCP Tools
 - `recommend_gifts`: 관계/상황/예산 기준으로 선물 후보 추천
 - `find_pickup_options`: 선물 후보별 픽업 매장과 경유 가능성 계산
 - `draft_gift_message`: 관계와 상황에 맞는 짧은 카드 메시지 생성
+
+## PlayMCP
+
+Submission endpoint:
+
+```text
+https://rush-gift-mcp.vercel.app/mcp
+```
+
+Health check:
+
+```text
+https://rush-gift-mcp.vercel.app/health
+```
+
+PlayMCP gateway:
+
+```text
+https://playmcp.kakao.com/mcp
+```
+
+The submission endpoint is this server. The PlayMCP gateway is Kakao's proxy for
+approved MCP servers in a user's toolbox and requires a PlayMCP access token.
 
 ## Demo Prompt
 
