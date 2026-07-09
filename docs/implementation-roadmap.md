@@ -40,6 +40,8 @@ Acceptance:
 
 Goal: PlayMCP-compatible endpoint.
 
+Status: implemented locally, deployment pending
+
 Tasks:
 
 - Run MCP over HTTP-compatible transport.
@@ -50,8 +52,9 @@ Tasks:
 
 Acceptance:
 
-- Public `https://.../mcp` endpoint is reachable.
-- PlayMCP registration loads tool list.
+- Local `http://127.0.0.1:8000/mcp` endpoint works.
+- Public `https://.../mcp` endpoint is reachable after deployment.
+- PlayMCP registration loads tool list after deployment.
 
 ## Phase 3: Quality Polish
 

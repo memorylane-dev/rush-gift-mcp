@@ -1,21 +1,83 @@
 from __future__ import annotations
 
-from typing import Annotated
+import os
+from typing import Annotated, Literal, cast
 
 from mcp.server.fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from rush_gift.services import DEFAULT_CURRENT_TIME, create_default_service
 
 
+Transport = Literal["stdio", "sse", "streamable-http"]
+APP_NAME = "오다 주웠다"
+DEFAULT_HTTP_PATH = "/mcp"
+
+
+def _normalize_transport(value: str | None) -> Transport:
+    normalized = (value or "stdio").strip().casefold().replace("_", "-")
+    if normalized == "http":
+        normalized = "streamable-http"
+    if normalized not in {"stdio", "sse", "streamable-http"}:
+        raise ValueError(
+            "MCP_TRANSPORT must be one of: stdio, sse, streamable-http, http"
+        )
+    return cast(Transport, normalized)
+
+
+def _env_int(*names: str, default: int) -> int:
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return int(value)
+    return default
+
+
+def _http_path() -> str:
+    path = (
+        os.getenv("FASTMCP_STREAMABLE_HTTP_PATH")
+        or os.getenv("MCP_HTTP_PATH")
+        or DEFAULT_HTTP_PATH
+    )
+    return path if path.startswith("/") else f"/{path}"
+
+
+TRANSPORT = _normalize_transport(os.getenv("MCP_TRANSPORT"))
+HTTP_HOST = (
+    os.getenv("FASTMCP_HOST")
+    or os.getenv("HOST")
+    or ("0.0.0.0" if TRANSPORT == "streamable-http" else "127.0.0.1")
+)
+HTTP_PORT = _env_int("FASTMCP_PORT", "PORT", default=8000)
+HTTP_PATH = _http_path()
+
+
 mcp = FastMCP(
-    "rush-gift",
+    APP_NAME,
     instructions=(
-        "약속 장소로 이동 중인 사용자에게 지금 픽업 가능한 선물, 경유 시간, "
-        "실패 리스크, 짧은 선물 메시지를 추천합니다. 모든 MVP 데이터는 fixture이며 "
+        "약속 장소로 가는 길에 급하게 선물이 필요한 사용자에게 지금 픽업 가능한 "
+        "선물, 경유 시간, 실패 리스크, 짧은 선물 메시지를 추천합니다. "
+        "모든 MVP 데이터는 fixture이며 "
         "실시간 재고/결제/예약을 보장하지 않습니다."
     ),
+    host=HTTP_HOST,
+    port=HTTP_PORT,
+    streamable_http_path=HTTP_PATH,
 )
 service = create_default_service()
+
+
+@mcp.custom_route("/health", methods=["GET"], include_in_schema=False)
+async def health_check(_request: Request) -> JSONResponse:
+    return JSONResponse(
+        {
+            "status": "ok",
+            "name": APP_NAME,
+            "mcp_path": HTTP_PATH,
+            "transport": TRANSPORT,
+        }
+    )
 
 
 @mcp.tool()
@@ -111,7 +173,7 @@ def draft_gift_message(
 
 
 def main() -> None:
-    mcp.run(transport="stdio")
+    mcp.run(transport=TRANSPORT)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 
+import httpx
+
 import main
 
 
@@ -35,3 +37,20 @@ def test_mcp_plan_rush_gift_tool_returns_structured_result() -> None:
 
     assert structured["recommendations"][0]["gift"]["name"] == "미니 꽃다발"
     assert structured["recommendations"][0]["pickup"]["route"]["feasible"] is True
+
+
+def test_http_health_route() -> None:
+    async def request_health() -> httpx.Response:
+        transport = httpx.ASGITransport(app=main.mcp.streamable_http_app())
+        async with httpx.AsyncClient(
+            transport=transport,
+            base_url="http://testserver",
+        ) as client:
+            return await client.get("/health")
+
+    response = asyncio.run(request_health())
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert response.json()["name"] == "오다 주웠다"
+    assert response.json()["mcp_path"] == "/mcp"

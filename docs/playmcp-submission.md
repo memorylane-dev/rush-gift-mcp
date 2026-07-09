@@ -21,7 +21,7 @@ Observed registration constraints:
 ### MCP Name
 
 ```text
-지금선물 픽업 플래너
+오다 주웠다
 ```
 
 ### MCP Identifier
@@ -33,14 +33,14 @@ rushGift
 ### MCP Description
 
 ```text
-약속 장소로 이동 중인 사용자의 출발지, 목적지, 도착 제한 시간, 예산, 관계, 상황을 바탕으로 선물 후보와 픽업 가능한 매장을 추천합니다. 후보별 적합도, 경유 추가 시간, 실패 리스크, 짧은 선물 메시지를 함께 제공합니다. 현재는 샘플 상품/매장 데이터로 동작하며, 추후 카카오 선물하기·카카오 로컬·카카오모빌리티 연동으로 교체 가능한 구조입니다.
+약속 장소로 가는 길에 급하게 선물이 필요할 때, 출발지·목적지·남은 시간·예산·관계·상황을 바탕으로 지금 픽업 가능한 선물 후보와 매장을 추천합니다. 후보별 적합도, 경유 시간, 도착 가능성, 실패 리스크, 짧은 선물 메시지를 함께 제공합니다. 현재는 샘플 데이터 기반 MVP이며 실시간 재고·결제·예약을 보장하지 않습니다.
 ```
 
 ### Starter Messages
 
 ```text
-강남역에서 판교 가는 길, 3만원 생일선물
-상사 집들이 선물, 2만원 이하 추천해줘
+강남역에서 판교 가는 길 선물 추천해줘
+상사 집들이 선물 2만원 이하로 추천해줘
 기념일 선물 픽업 가능한 곳 찾아줘
 ```
 
@@ -63,7 +63,7 @@ purchase history, or saved preferences are introduced.
 ### One-Liner
 
 ```text
-약속 장소로 이동 중인 사용자를 위해 지금 살 수 있는 선물과 픽업 경로를 추천합니다.
+약속 장소로 가는 길에 지금 픽업 가능한 선물과 경로를 추천합니다.
 ```
 
 ### Longer Pitch
@@ -114,13 +114,29 @@ gift box + route pin + clock
 
 ## Endpoint Plan
 
-Local development uses MCP Inspector. PlayMCP submission should expose an HTTP
-MCP endpoint from a deployed server.
+Local development can use MCP Inspector over stdio. PlayMCP submission should use
+the Streamable HTTP MCP endpoint exposed by the deployed server.
 
 Target endpoint shape:
 
 ```text
 https://<cloud-host>/mcp
+```
+
+Local HTTP check:
+
+```bash
+MCP_TRANSPORT=streamable-http FASTMCP_HOST=127.0.0.1 PORT=8000 uv run python main.py
+curl http://127.0.0.1:8000/health
+```
+
+Deployment runtime:
+
+```text
+MCP_TRANSPORT=streamable-http
+FASTMCP_HOST=0.0.0.0
+PORT=<platform provided port>
+MCP_HTTP_PATH=/mcp
 ```
 
 Deployment candidates:

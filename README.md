@@ -1,11 +1,11 @@
-# Rush Gift MCP
+# 오다 주웠다 MCP
 
 약속 장소로 이동 중인 사용자를 위해 지금 살 수 있는 선물과 픽업 동선을 추천하는
 PlayMCP 제출용 MCP 서버 프로젝트입니다.
 
 ## Concept
 
-**"늦었지만 빈손으로 가고 싶지 않을 때, AI가 선물 후보와 픽업 경로를 한 번에 짜주는 MCP"**
+**"오다 주웠다처럼 자연스럽게 건넬 수 있도록, AI가 선물 후보와 픽업 경로를 한 번에 짜주는 MCP"**
 
 사용자는 출발지, 목적지, 도착 제한 시간, 예산, 관계, 상황을 자연어로 말합니다.
 AI는 이 MCP의 도구를 호출해 선물 후보, 픽업 매장, 경유 추가 시간, 실패 리스크,
@@ -69,6 +69,8 @@ MCP Tools
 
 ## Quick Start
 
+Local MCP Inspector:
+
 ```bash
 uv sync
 uv run mcp dev main.py
@@ -87,6 +89,24 @@ stdio 서버로 직접 실행할 때:
 uv run python main.py
 ```
 
+HTTP MCP endpoint로 실행할 때:
+
+```bash
+MCP_TRANSPORT=streamable-http FASTMCP_HOST=127.0.0.1 PORT=8000 uv run python main.py
+```
+
+Local URLs:
+
+- MCP endpoint: `http://127.0.0.1:8000/mcp`
+- Health check: `http://127.0.0.1:8000/health`
+
+Docker:
+
+```bash
+docker build -t rush-gift-mcp .
+docker run --rm -p 8000:8000 rush-gift-mcp
+```
+
 테스트:
 
 ```bash
@@ -99,6 +119,7 @@ uv run pytest
 - [Architecture](docs/architecture.md)
 - [Implementation Roadmap](docs/implementation-roadmap.md)
 - [Demo Scenarios](docs/demo-scenarios.md)
+- [Deployment](docs/deployment.md)
 
 ## Development Status
 
@@ -111,6 +132,5 @@ Implemented:
 
 Next:
 
-- expose an HTTP MCP endpoint for PlayMCP registration
-- add deployment config
+- deploy the Dockerized HTTP MCP server
 - replace fixture providers with Kakao/web providers when available
