@@ -107,6 +107,21 @@ docker build -t rush-gift-mcp .
 docker run --rm -p 8000:8000 rush-gift-mcp
 ```
 
+Vercel:
+
+```bash
+npx vercel
+```
+
+After deployment, use:
+
+```text
+https://<production-domain>/mcp
+```
+
+If PlayMCP cannot load tools from the Vercel URL, deploy the same code to a
+container/always-on host with the Dockerfile.
+
 테스트:
 
 ```bash

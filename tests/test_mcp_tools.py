@@ -41,7 +41,7 @@ def test_mcp_plan_rush_gift_tool_returns_structured_result() -> None:
 
 def test_http_health_route() -> None:
     async def request_health() -> httpx.Response:
-        transport = httpx.ASGITransport(app=main.mcp.streamable_http_app())
+        transport = httpx.ASGITransport(app=main.app)
         async with httpx.AsyncClient(
             transport=transport,
             base_url="http://testserver",
@@ -54,3 +54,4 @@ def test_http_health_route() -> None:
     assert response.json()["status"] == "ok"
     assert response.json()["name"] == "오다 주웠다"
     assert response.json()["mcp_path"] == "/mcp"
+    assert response.json()["stateless_http"] is False

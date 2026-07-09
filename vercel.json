@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "env": {
+    "MCP_TRANSPORT": "streamable-http",
+    "MCP_HTTP_PATH": "/mcp",
+    "MCP_STATELESS_HTTP": "true"
+  }
+}

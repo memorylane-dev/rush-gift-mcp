@@ -34,6 +34,14 @@ def _env_int(*names: str, default: int) -> int:
     return default
 
 
+def _env_bool(*names: str, default: bool = False) -> bool:
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value.strip().casefold() in {"1", "true", "yes", "on"}
+    return default
+
+
 def _http_path() -> str:
     path = (
         os.getenv("FASTMCP_STREAMABLE_HTTP_PATH")
@@ -51,6 +59,11 @@ HTTP_HOST = (
 )
 HTTP_PORT = _env_int("FASTMCP_PORT", "PORT", default=8000)
 HTTP_PATH = _http_path()
+STATELESS_HTTP = _env_bool(
+    "FASTMCP_STATELESS_HTTP",
+    "MCP_STATELESS_HTTP",
+    default=bool(os.getenv("VERCEL")),
+)
 
 
 mcp = FastMCP(
@@ -64,6 +77,7 @@ mcp = FastMCP(
     host=HTTP_HOST,
     port=HTTP_PORT,
     streamable_http_path=HTTP_PATH,
+    stateless_http=STATELESS_HTTP,
 )
 service = create_default_service()
 
@@ -76,6 +90,7 @@ async def health_check(_request: Request) -> JSONResponse:
             "name": APP_NAME,
             "mcp_path": HTTP_PATH,
             "transport": TRANSPORT,
+            "stateless_http": STATELESS_HTTP,
         }
     )
 
@@ -170,6 +185,9 @@ def draft_gift_message(
         occasion=occasion,
         tone=tone,
     )
+
+
+app = mcp.streamable_http_app()
 
 
 def main() -> None:
