@@ -123,6 +123,12 @@ Target endpoint shape:
 https://<cloud-host>/mcp
 ```
 
+Current Vercel endpoint:
+
+```text
+https://rush-gift-mcp.vercel.app/mcp
+```
+
 Local HTTP check:
 
 ```bash

@@ -22,10 +22,22 @@ Expected endpoint after deployment:
 https://<project-name>.vercel.app/mcp
 ```
 
+Current production endpoint:
+
+```text
+https://rush-gift-mcp.vercel.app/mcp
+```
+
 Health check:
 
 ```text
 https://<project-name>.vercel.app/health
+```
+
+Current production health check:
+
+```text
+https://rush-gift-mcp.vercel.app/health
 ```
 
 Deploy from the repository root:
