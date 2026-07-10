@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 PLACE_PROVIDERS = ("fixture", "kakao_local", "tmap")
 ROUTE_PROVIDERS = ("mock", "kakao_mobility", "tmap")
+STORE_PROVIDERS = ("fixture", "tmap")
 
 _ENV_LOADED = False
 
@@ -31,6 +32,7 @@ class Settings:
     route_provider: str
     kakao_rest_api_key: str | None
     tmap_app_key: str | None = None
+    store_provider: str = "fixture"
 
 
 def load_settings() -> Settings:
@@ -38,6 +40,7 @@ def load_settings() -> Settings:
 
     place_provider = _choice("RUSH_GIFT_PLACE_PROVIDER", PLACE_PROVIDERS, default="fixture")
     route_provider = _choice("RUSH_GIFT_ROUTE_PROVIDER", ROUTE_PROVIDERS, default="mock")
+    store_provider = _choice("RUSH_GIFT_STORE_PROVIDER", STORE_PROVIDERS, default="fixture")
     kakao_key = os.getenv("KAKAO_REST_API_KEY", "").strip() or None
     tmap_key = os.getenv("TMAP_APP_KEY", "").strip() or None
 
@@ -50,7 +53,11 @@ def load_settings() -> Settings:
             "(로컬: .env 파일, Vercel: 프로젝트 Settings > Environment Variables)"
         )
 
-    needs_tmap_key = place_provider == "tmap" or route_provider == "tmap"
+    needs_tmap_key = (
+        place_provider == "tmap"
+        or route_provider == "tmap"
+        or store_provider == "tmap"
+    )
     if needs_tmap_key and not tmap_key:
         raise RuntimeError(
             "TMAP_APP_KEY가 설정되지 않았습니다. "
@@ -64,6 +71,7 @@ def load_settings() -> Settings:
         route_provider=route_provider,
         kakao_rest_api_key=kakao_key,
         tmap_app_key=tmap_key,
+        store_provider=store_provider,
     )
 
 

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from rush_gift.geo import haversine_km
 from rush_gift.models import Gift, GiftCriteria, Location, PickupStore
 
 
@@ -35,7 +36,9 @@ class FixturePickupStoreProvider:
     def __init__(self, data_file: str = "stores.json") -> None:
         self._stores = [PickupStore(**item) for item in _load_json(data_file)]
 
-    def find_stores(self, gift_ids: list[str]) -> list[PickupStore]:
+    def find_stores(
+        self, gift_ids: list[str], *, near: Location | None = None
+    ) -> list[PickupStore]:
         wanted = set(gift_ids)
         return [
             store
@@ -70,7 +73,7 @@ class MockRouteProvider:
     source_name = "mock_estimate"
 
     def travel_minutes(self, origin: Location, destination: Location, transport_mode: str) -> int:
-        distance_km = _haversine_km(origin.lat, origin.lng, destination.lat, destination.lng)
+        distance_km = haversine_km(origin.lat, origin.lng, destination.lat, destination.lng)
         speed_kmh = _speed_for_mode(transport_mode)
         base_minutes = distance_km / speed_kmh * 60
         # Add small friction for parking, crossings, and station exits.
@@ -88,14 +91,3 @@ def _speed_for_mode(transport_mode: str) -> float:
     return 28.0
 
 
-def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    from math import asin, cos, radians, sin, sqrt
-
-    radius_km = 6371.0
-    d_lat = radians(lat2 - lat1)
-    d_lng = radians(lng2 - lng1)
-    a = (
-        sin(d_lat / 2) ** 2
-        + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lng / 2) ** 2
-    )
-    return 2 * radius_km * asin(sqrt(a))

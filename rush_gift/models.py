@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Literal
 
 
@@ -29,6 +29,8 @@ class Gift:
     avoid_for: list[str]
     risk_level: RiskLevel
     message_hint: str
+    # 실매장 검색(POI)에 쓰는 키워드. 예: ["꽃집"]
+    store_keywords: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)

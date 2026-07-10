@@ -11,8 +11,13 @@ class GiftProvider(Protocol):
 
 
 class PickupStoreProvider(Protocol):
-    def find_stores(self, gift_ids: list[str]) -> list[PickupStore]:
-        """Return pickup stores that can provide at least one requested gift."""
+    def find_stores(
+        self, gift_ids: list[str], *, near: Location | None = None
+    ) -> list[PickupStore]:
+        """Return pickup stores that can provide at least one requested gift.
+
+        `near`는 실매장 검색의 중심 좌표(보통 목적지). fixture 구현은 무시한다.
+        """
 
 
 class PlaceProvider(Protocol):

@@ -10,6 +10,7 @@ import pytest
 # 여기 값이 .env보다 우선한다.
 os.environ["RUSH_GIFT_PLACE_PROVIDER"] = "fixture"
 os.environ["RUSH_GIFT_ROUTE_PROVIDER"] = "mock"
+os.environ["RUSH_GIFT_STORE_PROVIDER"] = "fixture"
 
 
 @pytest.fixture(autouse=True)
@@ -22,3 +23,4 @@ def _force_offline_providers(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setenv("RUSH_GIFT_PLACE_PROVIDER", "fixture")
     monkeypatch.setenv("RUSH_GIFT_ROUTE_PROVIDER", "mock")
+    monkeypatch.setenv("RUSH_GIFT_STORE_PROVIDER", "fixture")

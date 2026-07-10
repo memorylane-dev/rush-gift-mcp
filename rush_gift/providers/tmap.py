@@ -5,8 +5,9 @@ import time
 
 import httpx
 
-from rush_gift.models import Location
+from rush_gift.models import Location, PickupStore
 from rush_gift.providers.base import RouteProvider
+from rush_gift.providers.fixture import FixtureGiftProvider
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,12 @@ class TmapPlaceProvider:
                 f"장소 검색에 실패했습니다: {normalized} (TMAP POI API 오류: {detail})"
             ) from error
 
+        # TMAP POI는 결과가 없으면 204(빈 본문)를 반환한다.
+        if response.status_code == 204 or not response.content:
+            raise ValueError(
+                f"알 수 없는 장소입니다: {normalized}. 더 구체적인 이름으로 다시 시도하세요."
+            )
+
         pois = (
             response.json()
             .get("searchPoiInfo", {})
@@ -96,6 +103,130 @@ class TmapPlaceProvider:
         )
         self._cache[normalized.casefold()] = (time.monotonic(), location)
         return location
+
+
+STORE_CACHE_TTL_SECONDS = 60 * 10
+STORE_SEARCH_RADIUS_KM = 3
+STORES_PER_KEYWORD = 3
+
+# TMAP POI는 영업시간/재고를 주지 않는다. 보수적 가정값을 쓰고,
+# 응답 metadata의 stock_status="unknown"으로 불확실성을 표시한다.
+UNKNOWN_OPEN_UNTIL = "22:00"
+UNKNOWN_PICKUP_READY_MINUTES = 10
+UNKNOWN_RELIABILITY_SCORE = 0.6
+
+
+class TmapPickupStoreProvider:
+    """선물의 store_keywords로 목적지 근처 실제 매장을 검색한다."""
+
+    source_name = "tmap"
+
+    def __init__(
+        self,
+        app_key: str,
+        gift_provider: FixtureGiftProvider,
+        *,
+        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        cache_ttl_seconds: float = STORE_CACHE_TTL_SECONDS,
+        radius_km: int = STORE_SEARCH_RADIUS_KM,
+        stores_per_keyword: int = STORES_PER_KEYWORD,
+    ) -> None:
+        self._app_key = app_key
+        self._gift_provider = gift_provider
+        self._client = _shared_client(timeout_seconds)
+        self._cache_ttl = cache_ttl_seconds
+        self._radius_km = radius_km
+        self._per_keyword = stores_per_keyword
+        self._cache: dict[tuple[str, float, float], tuple[float, list[dict]]] = {}
+
+    def find_stores(
+        self, gift_ids: list[str], *, near: Location | None = None
+    ) -> list[PickupStore]:
+        if near is None:
+            return []
+
+        stores: dict[str, PickupStore] = {}
+        for gift in self._gift_provider.get_gifts(gift_ids):
+            for keyword in gift.store_keywords:
+                for poi in self._search_pois(keyword, near):
+                    store_id = f"tmap-{poi['id']}"
+                    existing = stores.get(store_id)
+                    if existing:
+                        merged = sorted({*existing.available_gift_ids, gift.id})
+                        stores[store_id] = PickupStore(
+                            **{**_store_kwargs(store_id, poi), "available_gift_ids": merged}
+                        )
+                    else:
+                        stores[store_id] = PickupStore(
+                            **{**_store_kwargs(store_id, poi), "available_gift_ids": [gift.id]}
+                        )
+        return list(stores.values())
+
+    def _search_pois(self, keyword: str, near: Location) -> list[dict]:
+        cache_key = (keyword, round(near.lat, 3), round(near.lng, 3))
+        cached = self._cache.get(cache_key)
+        if cached and time.monotonic() - cached[0] < self._cache_ttl:
+            return cached[1]
+
+        try:
+            response = self._client.get(
+                TMAP_POI_URL,
+                params={
+                    "version": 1,
+                    "searchKeyword": keyword,
+                    "centerLon": near.lng,
+                    "centerLat": near.lat,
+                    "radius": self._radius_km,
+                    "searchtypCd": "R",  # 중심 좌표에서 가까운 순
+                    "count": self._per_keyword,
+                },
+                headers={"appKey": self._app_key},
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as error:
+            # 매장 검색 실패가 추천 전체를 죽이면 안 된다.
+            logger.warning("TMAP 매장 검색 실패 (%s): %s", keyword, error)
+            return []
+
+        # 결과 없음 = 204(빈 본문). 검색 반경 안에 해당 매장이 없는 정상 상황.
+        if response.status_code == 204 or not response.content:
+            self._cache[cache_key] = (time.monotonic(), [])
+            return []
+
+        pois = (
+            response.json()
+            .get("searchPoiInfo", {})
+            .get("pois", {})
+            .get("poi", [])
+        )
+        valid = [
+            poi
+            for poi in pois
+            if (poi.get("frontLat") or poi.get("noorLat"))
+            and (poi.get("frontLon") or poi.get("noorLon"))
+        ]
+        self._cache[cache_key] = (time.monotonic(), valid)
+        return valid
+
+
+def _store_kwargs(store_id: str, poi: dict) -> dict:
+    address_parts = [
+        poi.get("upperAddrName"),
+        poi.get("middleAddrName"),
+        poi.get("roadName"),
+        poi.get("firstBuildingNo"),
+    ]
+    address = " ".join(part for part in address_parts if part) or "주소 미확인"
+    return {
+        "id": store_id,
+        "name": poi.get("name") or "이름 미확인",
+        "address": address,
+        "lat": float(poi.get("frontLat") or poi["noorLat"]),
+        "lng": float(poi.get("frontLon") or poi["noorLon"]),
+        "open_until": UNKNOWN_OPEN_UNTIL,
+        "pickup_ready_minutes": UNKNOWN_PICKUP_READY_MINUTES,
+        "reliability_score": UNKNOWN_RELIABILITY_SCORE,
+    }
 
 
 class TmapRouteProvider:

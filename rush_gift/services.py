@@ -27,6 +27,13 @@ from rush_gift.scoring import score_gift, score_pickup_option
 
 DEFAULT_CURRENT_TIME = "18:00"
 STOP_HANDOFF_MINUTES = 3
+# 경로 계산은 외부 API 호출이라 비싸다. 거리 기반 추정으로 매장을
+# 선별한 뒤 이 개수만큼만 실제 경로를 계산한다.
+ROUTE_CHECK_STORES_PER_GIFT = 1
+ROUTE_CHECK_STORES_MAX = 5
+
+# 매장 선별용 추정기. 실제 경로 provider와 무관하게 항상 무료다.
+_ROUTE_ESTIMATOR = MockRouteProvider()
 
 
 class RushGiftService:
@@ -184,11 +191,23 @@ class RushGiftService:
     ) -> dict[str, object]:
         origin_location = self.place_provider.resolve_location(origin)
         destination_location = self.place_provider.resolve_location(destination)
-        stores = self.pickup_store_provider.find_stores(gift_ids)
+        stores = [
+            store
+            for store in self.pickup_store_provider.find_stores(
+                gift_ids, near=destination_location
+            )
+            if _is_open_at(store, current_time)
+        ]
+        stores = self._top_stores_by_estimate(
+            stores,
+            origin=origin_location,
+            destination=destination_location,
+            minutes_until_meeting=minutes_until_meeting,
+            transport_mode=transport_mode,
+            count=max(limit, ROUTE_CHECK_STORES_MAX),
+        )
         options: list[dict[str, object]] = []
         for store in stores:
-            if not _is_open_at(store, current_time):
-                continue
             matching_gift_ids = sorted(set(gift_ids).intersection(store.available_gift_ids))
             route = self._route_via_store(
                 origin=origin_location,
@@ -201,7 +220,7 @@ class RushGiftService:
                 store=store,
                 route=route,
                 pickup_ready_minutes=store.pickup_ready_minutes,
-                stock_status="simulated",
+                stock_status=self._stock_status(),
                 route_status="estimated",
             )
             options.append(
@@ -247,10 +266,16 @@ class RushGiftService:
             "store_source": _source_of(self.pickup_store_provider),
             "place_source": _source_of(self.place_provider),
             "route_source": _source_of(self.route_provider),
-            "stock_status": "simulated",
+            "stock_status": self._stock_status(),
             "route_status": "estimated",
             "privacy": "request data is not persisted",
         }
+
+    def _stock_status(self) -> str:
+        # fixture 매장은 시뮬레이션 값, 실매장은 재고를 알 수 없음을 명시.
+        if _source_of(self.pickup_store_provider) == "fixture":
+            return "simulated"
+        return "unknown"
 
     def _rank_gifts(
         self,
@@ -275,9 +300,19 @@ class RushGiftService:
     ) -> PickupOption | None:
         stores = [
             store
-            for store in self.pickup_store_provider.find_stores([gift.id])
+            for store in self.pickup_store_provider.find_stores(
+                [gift.id], near=destination
+            )
             if _is_open_at(store, current_time)
         ]
+        stores = self._top_stores_by_estimate(
+            stores,
+            origin=origin,
+            destination=destination,
+            minutes_until_meeting=minutes_until_meeting,
+            transport_mode=transport_mode,
+            count=ROUTE_CHECK_STORES_PER_GIFT,
+        )
         options = [
             PickupOption(
                 store=store,
@@ -289,7 +324,7 @@ class RushGiftService:
                     transport_mode=transport_mode,
                 ),
                 pickup_ready_minutes=store.pickup_ready_minutes,
-                stock_status="simulated",
+                stock_status=self._stock_status(),
                 route_status="estimated",
             )
             for store in stores
@@ -297,6 +332,44 @@ class RushGiftService:
         if not options:
             return None
         return max(options, key=score_pickup_option)
+
+    def _top_stores_by_estimate(
+        self,
+        stores: list[PickupStore],
+        *,
+        origin: Location,
+        destination: Location,
+        minutes_until_meeting: int,
+        transport_mode: str,
+        count: int,
+    ) -> list[PickupStore]:
+        """점수가 높을 것으로 추정되는 매장만 남긴다.
+
+        실제 경로 API 대신 거리 기반 추정으로 점수를 매기므로 외부
+        호출 없이 후보를 좁힐 수 있다. 최종 응답에 나가는 경로 수치는
+        이후 실제 route_provider로 다시 계산된다.
+        """
+        if len(stores) <= count:
+            return stores
+        scored = []
+        for store in stores:
+            option = PickupOption(
+                store=store,
+                route=self._route_via_store(
+                    origin=origin,
+                    destination=destination,
+                    store=store,
+                    minutes_until_meeting=minutes_until_meeting,
+                    transport_mode=transport_mode,
+                    route_provider=_ROUTE_ESTIMATOR,
+                ),
+                pickup_ready_minutes=store.pickup_ready_minutes,
+                stock_status="estimate",
+                route_status="estimate",
+            )
+            scored.append((score_pickup_option(option), store))
+        scored.sort(key=lambda item: item[0], reverse=True)
+        return [store for _, store in scored[:count]]
 
     def _route_via_store(
         self,
@@ -306,10 +379,12 @@ class RushGiftService:
         store: PickupStore,
         minutes_until_meeting: int,
         transport_mode: str,
+        route_provider: RouteProvider | None = None,
     ) -> RouteEstimate:
-        direct = self.route_provider.travel_minutes(origin, destination, transport_mode)
-        to_store = self.route_provider.travel_minutes(origin, store.location, transport_mode)
-        store_to_dest = self.route_provider.travel_minutes(store.location, destination, transport_mode)
+        provider = route_provider or self.route_provider
+        direct = provider.travel_minutes(origin, destination, transport_mode)
+        to_store = provider.travel_minutes(origin, store.location, transport_mode)
+        store_to_dest = provider.travel_minutes(store.location, destination, transport_mode)
         pickup_wait = max(0, store.pickup_ready_minutes - to_store)
         via = to_store + pickup_wait + STOP_HANDOFF_MINUTES + store_to_dest
         margin = minutes_until_meeting - via
@@ -333,8 +408,10 @@ def create_default_service(settings: Settings | None = None) -> RushGiftService:
     """
     settings = settings or load_settings()
 
+    gift_provider = FixtureGiftProvider()
     place_provider: PlaceProvider = FixturePlaceProvider()
     route_provider: RouteProvider = MockRouteProvider()
+    pickup_store_provider: PickupStoreProvider = FixturePickupStoreProvider()
 
     if settings.place_provider == "kakao_local":
         from rush_gift.providers.kakao import KakaoLocalPlaceProvider
@@ -364,9 +441,18 @@ def create_default_service(settings: Settings | None = None) -> RushGiftService:
             fallback=MockRouteProvider(),
         )
 
+    if settings.store_provider == "tmap":
+        from rush_gift.providers.tmap import TmapPickupStoreProvider
+
+        assert settings.tmap_app_key is not None
+        pickup_store_provider = TmapPickupStoreProvider(
+            settings.tmap_app_key,
+            gift_provider,
+        )
+
     return RushGiftService(
-        gift_provider=FixtureGiftProvider(),
-        pickup_store_provider=FixturePickupStoreProvider(),
+        gift_provider=gift_provider,
+        pickup_store_provider=pickup_store_provider,
         place_provider=place_provider,
         route_provider=route_provider,
     )
@@ -374,6 +460,8 @@ def create_default_service(settings: Settings | None = None) -> RushGiftService:
 
 def _source_of(provider: object) -> str:
     return getattr(provider, "source_name", "unknown")
+
+
 
 
 def _summary_for_plan(feasible_count: int) -> str:
