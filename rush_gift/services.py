@@ -69,7 +69,9 @@ class RushGiftService:
         gift_scores = self._rank_gifts(criteria)
         recommendations: list[RushGiftRecommendation] = []
 
-        for gift, base_score, reasons, risks in gift_scores[:8]:
+        # 경로 계산은 외부 API 호출이라 비싸다. 상위 후보만 검토한다.
+        candidate_count = min(8, max(4, limit * 2))
+        for gift, base_score, reasons, risks in gift_scores[:candidate_count]:
             pickup = self._best_pickup_option(
                 gift=gift,
                 origin=origin_location,
