@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from typing import Annotated, Literal, cast
 
+from pydantic import Field
+
 from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -115,17 +117,17 @@ async def health_check(_request: Request) -> JSONResponse:
 
 @mcp.tool()
 def plan_rush_gift(
-    origin: Annotated[str, "출발지 이름. 예: 강남역"],
-    destination: Annotated[str, "목적지 이름. 예: 판교역"],
-    relationship: Annotated[str, "받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님"],
-    occasion: Annotated[str, "상황. 예: 생일, 집들이, 사과, 감사, 기념일"],
-    budget_krw: Annotated[int, "선물 예산. 원 단위."],
-    minutes_until_meeting: Annotated[int, "약속까지 남은 시간. 분 단위."],
-    preferences: Annotated[str, "선호 조건. 예: 디저트, 꽃, 실용적인 것"] = "",
-    constraints: Annotated[str, "피해야 할 조건. 예: 향 싫어함, 술 제외"] = "",
-    transport_mode: Annotated[str, "이동 수단. 예: car, taxi, transit, walk"] = "car",
-    current_time: Annotated[str, "현재 시각. HH:MM 형식."] = DEFAULT_CURRENT_TIME,
-    limit: Annotated[int, "반환할 추천 개수."] = 3,
+    origin: Annotated[str, Field(description="출발지 이름. 예: 강남역")],
+    destination: Annotated[str, Field(description="목적지 이름. 예: 판교역")],
+    relationship: Annotated[str, Field(description="받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님")],
+    occasion: Annotated[str, Field(description="상황. 예: 생일, 집들이, 사과, 감사, 기념일")],
+    budget_krw: Annotated[int, Field(description="선물 예산. 원 단위.")],
+    minutes_until_meeting: Annotated[int, Field(description="약속까지 남은 시간. 분 단위.")],
+    preferences: Annotated[str, Field(description="선호 조건. 예: 디저트, 꽃, 실용적인 것")] = "",
+    constraints: Annotated[str, Field(description="피해야 할 조건. 예: 향 싫어함, 술 제외")] = "",
+    transport_mode: Annotated[str, Field(description="이동 수단. 예: car, taxi, transit, walk")] = "car",
+    current_time: Annotated[str, Field(description="현재 시각. HH:MM 형식.")] = DEFAULT_CURRENT_TIME,
+    limit: Annotated[int, Field(description="반환할 추천 개수.")] = 3,
 ) -> dict[str, object]:
     """출발지, 목적지, 남은 시간이 주어지면 이 도구를 사용하세요.
 
@@ -151,12 +153,12 @@ def plan_rush_gift(
 
 @mcp.tool()
 def recommend_gifts(
-    relationship: Annotated[str, "받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님"],
-    occasion: Annotated[str, "상황. 예: 생일, 집들이, 사과, 감사, 기념일"],
-    budget_krw: Annotated[int, "선물 예산. 원 단위."],
-    preferences: Annotated[str, "선호 조건. 예: 디저트, 꽃, 실용적인 것"] = "",
-    constraints: Annotated[str, "피해야 할 조건. 예: 향 싫어함, 술 제외"] = "",
-    limit: Annotated[int, "반환할 후보 개수."] = 5,
+    relationship: Annotated[str, Field(description="받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님")],
+    occasion: Annotated[str, Field(description="상황. 예: 생일, 집들이, 사과, 감사, 기념일")],
+    budget_krw: Annotated[int, Field(description="선물 예산. 원 단위.")],
+    preferences: Annotated[str, Field(description="선호 조건. 예: 디저트, 꽃, 실용적인 것")] = "",
+    constraints: Annotated[str, Field(description="피해야 할 조건. 예: 향 싫어함, 술 제외")] = "",
+    limit: Annotated[int, Field(description="반환할 후보 개수.")] = 5,
 ) -> dict[str, object]:
     """선물 아이디어만 필요할 때 사용하는 가벼운 도구입니다.
 
@@ -178,13 +180,13 @@ def recommend_gifts(
 
 @mcp.tool()
 def find_pickup_options(
-    gift_ids: Annotated[list[str], "픽업 가능성을 확인할 선물 ID 목록."],
-    origin: Annotated[str, "출발지 이름. 예: 강남역"],
-    destination: Annotated[str, "목적지 이름. 예: 판교역"],
-    minutes_until_meeting: Annotated[int, "약속까지 남은 시간. 분 단위."],
-    transport_mode: Annotated[str, "이동 수단. 예: car, taxi, transit, walk"] = "car",
-    current_time: Annotated[str, "현재 시각. HH:MM 형식."] = DEFAULT_CURRENT_TIME,
-    limit: Annotated[int, "반환할 픽업 후보 개수."] = 5,
+    gift_ids: Annotated[list[str], Field(description="픽업 가능성을 확인할 선물 ID 목록.")],
+    origin: Annotated[str, Field(description="출발지 이름. 예: 강남역")],
+    destination: Annotated[str, Field(description="목적지 이름. 예: 판교역")],
+    minutes_until_meeting: Annotated[int, Field(description="약속까지 남은 시간. 분 단위.")],
+    transport_mode: Annotated[str, Field(description="이동 수단. 예: car, taxi, transit, walk")] = "car",
+    current_time: Annotated[str, Field(description="현재 시각. HH:MM 형식.")] = DEFAULT_CURRENT_TIME,
+    limit: Annotated[int, Field(description="반환할 픽업 후보 개수.")] = 5,
 ) -> dict[str, object]:
     """이미 고른 선물(gift_ids)의 픽업 매장과 경유 시간을 계산합니다.
 
@@ -205,10 +207,10 @@ def find_pickup_options(
 
 @mcp.tool()
 def draft_gift_message(
-    gift_name: Annotated[str, "선물 이름. 예: 미니 꽃다발"],
-    relationship: Annotated[str, "받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님"],
-    occasion: Annotated[str, "상황. 예: 생일, 집들이, 사과, 감사, 기념일"],
-    tone: Annotated[str, "메시지 톤. 예: warm, polite"] = "warm",
+    gift_name: Annotated[str, Field(description="선물 이름. 예: 미니 꽃다발")],
+    relationship: Annotated[str, Field(description="받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님")],
+    occasion: Annotated[str, Field(description="상황. 예: 생일, 집들이, 사과, 감사, 기념일")],
+    tone: Annotated[str, Field(description="메시지 톤. 예: warm, polite")] = "warm",
 ) -> dict[str, object]:
     """선물과 상황에 맞는 짧은 카드 메시지를 작성합니다."""
 
