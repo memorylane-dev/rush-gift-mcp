@@ -33,14 +33,14 @@ rushGift
 ### MCP Description
 
 ```text
-약속 장소로 가는 길에 급하게 선물이 필요할 때, 출발지·목적지·남은 시간·예산·관계·상황을 바탕으로 지금 픽업 가능한 선물 후보와 매장을 추천합니다. 후보별 적합도, 경유 시간, 도착 가능성, 실패 리스크, 짧은 선물 메시지를 함께 제공합니다. 현재는 샘플 데이터 기반 MVP이며 실시간 재고·결제·예약을 보장하지 않습니다.
+약속 장소로 이동 중인 사용자의 출발지, 목적지, 남은 시간, 예산, 관계, 상황을 바탕으로 지금 픽업 가능한 선물 후보와 매장을 추천합니다. 실시간 지도 데이터로 목적지 근처의 실제 매장을 찾고, 경유 시간과 약속 시간 안 도착 가능성을 계산하며, 후보별 적합도·리스크·짧은 선물 메시지를 함께 제공합니다. 재고·결제·예약은 보장하지 않습니다.
 ```
 
 ### Starter Messages
 
 ```text
-강남역에서 판교 가는 길 선물 추천해줘
-상사 집들이 선물 2만원 이하로 추천해줘
+강남역에서 판교역 가는 길 선물 추천해줘
+상사 집들이 선물 2만원 이하 추천해줘
 기념일 선물 픽업 가능한 곳 찾아줘
 ```
 
@@ -123,7 +123,13 @@ Target endpoint shape:
 https://<cloud-host>/mcp
 ```
 
-Current Vercel endpoint:
+Contest submission endpoint (KakaoCloud — required for Agentic Player 10):
+
+```text
+https://rush-gift-mcp.playmcp-endpoint.kakaocloud.io/mcp
+```
+
+Development endpoint (Vercel):
 
 ```text
 https://rush-gift-mcp.vercel.app/mcp
