@@ -6,6 +6,7 @@ from typing import Annotated, Literal, cast
 from pydantic import Field
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -115,7 +116,15 @@ async def health_check(_request: Request) -> JSONResponse:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Plan a rush gift pickup",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,  # 외부 지도/경로 API 호출
+    )
+)
 def plan_rush_gift(
     origin: Annotated[str, Field(description="출발지 이름. 예: 강남역")],
     destination: Annotated[str, Field(description="목적지 이름. 예: 판교역")],
@@ -129,11 +138,14 @@ def plan_rush_gift(
     current_time: Annotated[str, Field(description="현재 시각. HH:MM 형식.")] = DEFAULT_CURRENT_TIME,
     limit: Annotated[int, Field(description="반환할 추천 개수.")] = 3,
 ) -> dict[str, object]:
-    """출발지, 목적지, 남은 시간이 주어지면 이 도구를 사용하세요.
+    """Plans a last-minute gift pickup with Oda Juwotda(오다 주웠다).
 
-    선물 추천 + 픽업 매장 + 경유 시간 + 약속 시간 안 도착 가능 여부 +
-    선물 메시지를 한 번에 반환합니다. 사용자가 이동 경로나 약속 시간을
-    언급했다면 recommend_gifts 대신 반드시 이 도구를 호출하세요.
+    Use this tool whenever the user gives an origin, a destination, and the
+    minutes left before a meeting. It returns everything in one call: gift
+    recommendations, pickup stores near the destination, detour travel time,
+    whether the user can still arrive on time, and a short gift message.
+    If the user mentions a route or a meeting time, call this tool instead
+    of recommend_gifts.
     """
 
     return service.plan_rush_gift(
@@ -151,7 +163,15 @@ def plan_rush_gift(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Recommend gift candidates",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    )
+)
 def recommend_gifts(
     relationship: Annotated[str, Field(description="받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님")],
     occasion: Annotated[str, Field(description="상황. 예: 생일, 집들이, 사과, 감사, 기념일")],
@@ -160,12 +180,12 @@ def recommend_gifts(
     constraints: Annotated[str, Field(description="피해야 할 조건. 예: 향 싫어함, 술 제외")] = "",
     limit: Annotated[int, Field(description="반환할 후보 개수.")] = 5,
 ) -> dict[str, object]:
-    """선물 아이디어만 필요할 때 사용하는 가벼운 도구입니다.
+    """Recommends gift ideas with Oda Juwotda(오다 주웠다) — ideas only.
 
-    관계, 상황, 예산, 선호 조건에 맞는 선물 후보를 반환합니다.
-    출발지/목적지/남은 시간 정보가 있다면 이 도구가 아니라
-    plan_rush_gift를 호출하세요. 이 도구는 픽업 매장과 이동 시간을
-    계산하지 않습니다.
+    Returns gift candidates matched to relationship, occasion, budget,
+    preferences, and constraints. It does not compute pickup stores or
+    travel time. If origin, destination, or remaining minutes are
+    available, call plan_rush_gift instead of this tool.
     """
 
     return service.recommend_gifts(
@@ -178,7 +198,15 @@ def recommend_gifts(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Find pickup stores for chosen gifts",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,  # 외부 지도/경로 API 호출
+    )
+)
 def find_pickup_options(
     gift_ids: Annotated[list[str], Field(description="픽업 가능성을 확인할 선물 ID 목록.")],
     origin: Annotated[str, Field(description="출발지 이름. 예: 강남역")],
@@ -188,10 +216,12 @@ def find_pickup_options(
     current_time: Annotated[str, Field(description="현재 시각. HH:MM 형식.")] = DEFAULT_CURRENT_TIME,
     limit: Annotated[int, Field(description="반환할 픽업 후보 개수.")] = 5,
 ) -> dict[str, object]:
-    """이미 고른 선물(gift_ids)의 픽업 매장과 경유 시간을 계산합니다.
+    """Finds pickup stores and detour times with Oda Juwotda(오다 주웠다)
+    for gifts that are already chosen (gift_ids).
 
-    recommend_gifts로 후보를 좁힌 뒤 후속으로 사용하세요. 처음부터
-    장소와 시간이 주어진 경우에는 plan_rush_gift 하나로 충분합니다.
+    Use this as a follow-up after narrowing candidates with
+    recommend_gifts. When origin, destination, and remaining time are all
+    known from the start, plan_rush_gift alone is enough.
     """
 
     return service.find_pickup_options(
@@ -205,14 +235,23 @@ def find_pickup_options(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Draft a gift card message",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    )
+)
 def draft_gift_message(
     gift_name: Annotated[str, Field(description="선물 이름. 예: 미니 꽃다발")],
     relationship: Annotated[str, Field(description="받는 사람과의 관계. 예: 여자친구, 상사, 친구, 부모님")],
     occasion: Annotated[str, Field(description="상황. 예: 생일, 집들이, 사과, 감사, 기념일")],
     tone: Annotated[str, Field(description="메시지 톤. 예: warm, polite")] = "warm",
 ) -> dict[str, object]:
-    """선물과 상황에 맞는 짧은 카드 메시지를 작성합니다."""
+    """Drafts a short gift card message with Oda Juwotda(오다 주웠다)
+    that fits the gift, relationship, occasion, and tone."""
 
     return service.draft_gift_message(
         gift_name=gift_name,

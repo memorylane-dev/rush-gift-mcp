@@ -33,7 +33,10 @@ class Gift:
     store_keywords: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
-        return asdict(self)
+        data = asdict(self)
+        # 내부 검색용 필드는 응답에서 제외한다 (PlayMCP: result 최소화).
+        data.pop("store_keywords", None)
+        return data
 
 
 @dataclass(frozen=True)

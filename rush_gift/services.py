@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+
 from rush_gift.config import Settings, load_settings
 from rush_gift.models import (
     Gift,
@@ -76,17 +78,30 @@ class RushGiftService:
         gift_scores = self._rank_gifts(criteria)
         recommendations: list[RushGiftRecommendation] = []
 
-        # 경로 계산은 외부 API 호출이라 비싸다. 상위 후보만 검토한다.
+        # 경로 계산은 외부 API 호출이라 비싸다. 상위 후보만 검토하고,
+        # 선물별 매장 검색/경로 계산은 병렬로 수행한다 (PlayMCP 응답속도
+        # 요건: p99 3초). 직행 경로를 먼저 한 번 계산해 캐시를 데워
+        # 병렬 작업의 중복 호출을 줄인다.
         candidate_count = min(8, max(4, limit * 2))
-        for gift, base_score, reasons, risks in gift_scores[:candidate_count]:
-            pickup = self._best_pickup_option(
-                gift=gift,
-                origin=origin_location,
-                destination=destination_location,
-                minutes_until_meeting=minutes_until_meeting,
-                transport_mode=transport_mode,
-                current_time=current_time,
+        candidates = gift_scores[:candidate_count]
+        self.route_provider.travel_minutes(
+            origin_location, destination_location, transport_mode
+        )
+        with ThreadPoolExecutor(max_workers=max(1, len(candidates))) as pool:
+            pickups = list(
+                pool.map(
+                    lambda item: self._best_pickup_option(
+                        gift=item[0],
+                        origin=origin_location,
+                        destination=destination_location,
+                        minutes_until_meeting=minutes_until_meeting,
+                        transport_mode=transport_mode,
+                        current_time=current_time,
+                    ),
+                    candidates,
+                )
             )
+        for (gift, base_score, reasons, risks), pickup in zip(candidates, pickups):
             pickup_score = score_pickup_option(pickup) if pickup else -20
             final_score = base_score + pickup_score
             if pickup and pickup.route.feasible:
@@ -206,16 +221,26 @@ class RushGiftService:
             transport_mode=transport_mode,
             count=max(limit, ROUTE_CHECK_STORES_MAX),
         )
-        options: list[dict[str, object]] = []
-        for store in stores:
-            matching_gift_ids = sorted(set(gift_ids).intersection(store.available_gift_ids))
-            route = self._route_via_store(
-                origin=origin_location,
-                destination=destination_location,
-                store=store,
-                minutes_until_meeting=minutes_until_meeting,
-                transport_mode=transport_mode,
+        # 매장별 경로 계산을 병렬로 수행한다 (PlayMCP 응답속도 요건).
+        self.route_provider.travel_minutes(
+            origin_location, destination_location, transport_mode
+        )
+        with ThreadPoolExecutor(max_workers=max(1, len(stores) or 1)) as pool:
+            routes = list(
+                pool.map(
+                    lambda store: self._route_via_store(
+                        origin=origin_location,
+                        destination=destination_location,
+                        store=store,
+                        minutes_until_meeting=minutes_until_meeting,
+                        transport_mode=transport_mode,
+                    ),
+                    stores,
+                )
             )
+        options: list[dict[str, object]] = []
+        for store, route in zip(stores, routes):
+            matching_gift_ids = sorted(set(gift_ids).intersection(store.available_gift_ids))
             option = PickupOption(
                 store=store,
                 route=route,
