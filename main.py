@@ -105,6 +105,10 @@ async def health_check(_request: Request) -> JSONResponse:
             "mcp_path": HTTP_PATH,
             "transport": TRANSPORT,
             "stateless_http": STATELESS_HTTP,
+            # Vercel이 git 연동 배포 시 자동 주입. 로컬에서는 "local".
+            "commit": os.getenv("VERCEL_GIT_COMMIT_SHA", "local")[:7],
+            "place_provider": settings.place_provider,
+            "route_provider": settings.route_provider,
         }
     )
 
@@ -123,7 +127,12 @@ def plan_rush_gift(
     current_time: Annotated[str, "현재 시각. HH:MM 형식."] = DEFAULT_CURRENT_TIME,
     limit: Annotated[int, "반환할 추천 개수."] = 3,
 ) -> dict[str, object]:
-    """선물 추천, 픽업 매장, 경유 가능성, 메시지를 한 번에 계획합니다."""
+    """출발지, 목적지, 남은 시간이 주어지면 이 도구를 사용하세요.
+
+    선물 추천 + 픽업 매장 + 경유 시간 + 약속 시간 안 도착 가능 여부 +
+    선물 메시지를 한 번에 반환합니다. 사용자가 이동 경로나 약속 시간을
+    언급했다면 recommend_gifts 대신 반드시 이 도구를 호출하세요.
+    """
 
     return service.plan_rush_gift(
         origin=origin,
@@ -149,7 +158,13 @@ def recommend_gifts(
     constraints: Annotated[str, "피해야 할 조건. 예: 향 싫어함, 술 제외"] = "",
     limit: Annotated[int, "반환할 후보 개수."] = 5,
 ) -> dict[str, object]:
-    """관계, 상황, 예산, 선호 조건에 맞는 선물 후보를 추천합니다."""
+    """선물 아이디어만 필요할 때 사용하는 가벼운 도구입니다.
+
+    관계, 상황, 예산, 선호 조건에 맞는 선물 후보를 반환합니다.
+    출발지/목적지/남은 시간 정보가 있다면 이 도구가 아니라
+    plan_rush_gift를 호출하세요. 이 도구는 픽업 매장과 이동 시간을
+    계산하지 않습니다.
+    """
 
     return service.recommend_gifts(
         relationship=relationship,
@@ -171,7 +186,11 @@ def find_pickup_options(
     current_time: Annotated[str, "현재 시각. HH:MM 형식."] = DEFAULT_CURRENT_TIME,
     limit: Annotated[int, "반환할 픽업 후보 개수."] = 5,
 ) -> dict[str, object]:
-    """선택한 선물 후보를 픽업할 수 있는 매장과 경유 시간을 계산합니다."""
+    """이미 고른 선물(gift_ids)의 픽업 매장과 경유 시간을 계산합니다.
+
+    recommend_gifts로 후보를 좁힌 뒤 후속으로 사용하세요. 처음부터
+    장소와 시간이 주어진 경우에는 plan_rush_gift 하나로 충분합니다.
+    """
 
     return service.find_pickup_options(
         gift_ids=gift_ids,
