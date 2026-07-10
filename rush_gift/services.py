@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from rush_gift.config import Settings, load_settings
 from rush_gift.models import (
     Gift,
     GiftCriteria,
@@ -99,7 +100,7 @@ class RushGiftService:
                         relationship=relationship,
                         occasion=occasion,
                     )["message"],
-                    source="fixture",
+                    source=_source_of(self.gift_provider),
                 )
             )
 
@@ -133,7 +134,7 @@ class RushGiftService:
             },
             "recommendations": [item.to_dict() for item in ranked],
             "fallback": _fallback_for_timing(feasible_count),
-            "metadata": _metadata(),
+            "metadata": self._metadata(),
         }
 
     def recommend_gifts(
@@ -165,7 +166,7 @@ class RushGiftService:
                 }
                 for gift, score, reasons, risks in ranked
             ],
-            "metadata": _metadata(),
+            "metadata": self._metadata(),
         }
 
     def find_pickup_options(
@@ -213,7 +214,7 @@ class RushGiftService:
         return {
             "summary": f"{len(options)}개의 픽업 후보를 찾았습니다.",
             "options": options,
-            "metadata": _metadata(),
+            "metadata": self._metadata(),
         }
 
     def draft_gift_message(
@@ -236,6 +237,17 @@ class RushGiftService:
                 "source": "template",
                 "note": "MVP uses deterministic message templates.",
             },
+        }
+
+    def _metadata(self) -> dict[str, object]:
+        return {
+            "gift_source": _source_of(self.gift_provider),
+            "store_source": _source_of(self.pickup_store_provider),
+            "place_source": _source_of(self.place_provider),
+            "route_source": _source_of(self.route_provider),
+            "stock_status": "simulated",
+            "route_status": "estimated",
+            "privacy": "request data is not persisted",
         }
 
     def _rank_gifts(
@@ -311,13 +323,55 @@ class RushGiftService:
         )
 
 
-def create_default_service() -> RushGiftService:
+def create_default_service(settings: Settings | None = None) -> RushGiftService:
+    """환경 변수 설정에 따라 provider를 조립한다.
+
+    RUSH_GIFT_PLACE_PROVIDER / RUSH_GIFT_ROUTE_PROVIDER 값으로 fixture와
+    Kakao API 구현을 선택한다. 기본값은 네트워크가 필요 없는 fixture/mock.
+    """
+    settings = settings or load_settings()
+
+    place_provider: PlaceProvider = FixturePlaceProvider()
+    route_provider: RouteProvider = MockRouteProvider()
+
+    if settings.place_provider == "kakao_local":
+        from rush_gift.providers.kakao import KakaoLocalPlaceProvider
+
+        assert settings.kakao_rest_api_key is not None  # load_settings가 보장
+        place_provider = KakaoLocalPlaceProvider(settings.kakao_rest_api_key)
+    elif settings.place_provider == "tmap":
+        from rush_gift.providers.tmap import TmapPlaceProvider
+
+        assert settings.tmap_app_key is not None
+        place_provider = TmapPlaceProvider(settings.tmap_app_key)
+
+    if settings.route_provider == "kakao_mobility":
+        from rush_gift.providers.kakao import KakaoMobilityRouteProvider
+
+        assert settings.kakao_rest_api_key is not None
+        route_provider = KakaoMobilityRouteProvider(
+            settings.kakao_rest_api_key,
+            fallback=MockRouteProvider(),
+        )
+    elif settings.route_provider == "tmap":
+        from rush_gift.providers.tmap import TmapRouteProvider
+
+        assert settings.tmap_app_key is not None
+        route_provider = TmapRouteProvider(
+            settings.tmap_app_key,
+            fallback=MockRouteProvider(),
+        )
+
     return RushGiftService(
         gift_provider=FixtureGiftProvider(),
         pickup_store_provider=FixturePickupStoreProvider(),
-        place_provider=FixturePlaceProvider(),
-        route_provider=MockRouteProvider(),
+        place_provider=place_provider,
+        route_provider=route_provider,
     )
+
+
+def _source_of(provider: object) -> str:
+    return getattr(provider, "source_name", "unknown")
 
 
 def _summary_for_plan(feasible_count: int) -> str:
@@ -339,15 +393,6 @@ def _fallback_for_timing(feasible_count: int) -> dict[str, object] | None:
     }
 
 
-def _metadata() -> dict[str, object]:
-    return {
-        "gift_source": "fixture",
-        "store_source": "fixture",
-        "route_source": "mock_estimate",
-        "stock_status": "simulated",
-        "route_status": "estimated",
-        "privacy": "request data is not persisted",
-    }
 
 
 def _is_open_at(store: PickupStore, current_time: str) -> bool:

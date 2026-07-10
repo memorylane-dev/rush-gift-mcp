@@ -7,6 +7,7 @@ from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from rush_gift.config import load_settings
 from rush_gift.services import DEFAULT_CURRENT_TIME, create_default_service
 
 
@@ -66,20 +67,33 @@ STATELESS_HTTP = _env_bool(
 )
 
 
-mcp = FastMCP(
-    APP_NAME,
-    instructions=(
+settings = load_settings()
+
+
+def _instructions() -> str:
+    if settings.place_provider == "fixture":
+        data_note = "모든 MVP 데이터는 fixture이며 "
+    else:
+        data_note = (
+            "장소 좌표와 이동 시간은 실시간 API 기반이고, "
+            "선물/매장 데이터는 샘플이며 "
+        )
+    return (
         "약속 장소로 가는 길에 급하게 선물이 필요한 사용자에게 지금 픽업 가능한 "
         "선물, 경유 시간, 실패 리스크, 짧은 선물 메시지를 추천합니다. "
-        "모든 MVP 데이터는 fixture이며 "
-        "실시간 재고/결제/예약을 보장하지 않습니다."
-    ),
+        f"{data_note}실시간 재고/결제/예약을 보장하지 않습니다."
+    )
+
+
+mcp = FastMCP(
+    APP_NAME,
+    instructions=_instructions(),
     host=HTTP_HOST,
     port=HTTP_PORT,
     streamable_http_path=HTTP_PATH,
     stateless_http=STATELESS_HTTP,
 )
-service = create_default_service()
+service = create_default_service(settings)
 
 
 @mcp.custom_route("/health", methods=["GET"], include_in_schema=False)

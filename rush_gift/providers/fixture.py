@@ -45,6 +45,8 @@ class FixturePickupStoreProvider:
 
 
 class FixturePlaceProvider:
+    source_name = "fixture"
+
     def __init__(self, data_file: str = "places.json") -> None:
         self._places = {
             item["name"].casefold(): Location(**item)
@@ -65,6 +67,8 @@ class FixturePlaceProvider:
 
 
 class MockRouteProvider:
+    source_name = "mock_estimate"
+
     def travel_minutes(self, origin: Location, destination: Location, transport_mode: str) -> int:
         distance_km = _haversine_km(origin.lat, origin.lng, destination.lat, destination.lng)
         speed_kmh = _speed_for_mode(transport_mode)
